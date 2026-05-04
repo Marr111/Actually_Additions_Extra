@@ -1,0 +1,8 @@
+{
+  "type": "processingmod:aa_machine",
+  "ingredient1": { "item": "actuallyadditions:palis_crystal" },
+  "ingredient2": { "item": "minecraft:lapis_block" },
+  "result1": { "id": "actuallyadditions:empowered_palis_crystal", "count": 1 },
+  "energy_cost": 10000,
+  "processing_time": 200
+}
