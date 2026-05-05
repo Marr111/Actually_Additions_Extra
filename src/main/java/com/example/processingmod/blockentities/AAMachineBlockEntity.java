@@ -37,13 +37,24 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (slot == 3) {
+            if (slot == 3) { // Upgrade
                 return stack.is(com.example.processingmod.items.ModItems.IRON_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.GOLD_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.DIAMOND_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.NETHERITE_UPGRADE.get());
             }
+            if (slot == 2) { // Output
+                return false; // Non permettere l'inserimento negli slot di output
+            }
             return super.isItemValid(slot, stack);
+        }
+
+        @Override
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot < 2) { // Slot Input
+                return ItemStack.EMPTY; // Non permettere l'estrazione dagli slot di input
+            }
+            return super.extractItem(slot, amount, simulate);
         }
 
         @Override
@@ -53,10 +64,8 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    // Wrappers per limitare l'accesso in base al lato
-    private final IItemHandler inputHandler = new RangedWrapper(itemHandler, 0, 2);
-    private final IItemHandler outputHandler = new RangedWrapper(itemHandler, 2, 3);
-    private final IItemHandler upgradeHandler = new RangedWrapper(itemHandler, 3, 4);
+    // Wrapper unico per tutti i lati (esclude solo l'upgrade allo slot 3)
+    private final IItemHandler automationHandler = new RangedWrapper(itemHandler, 0, 3);
 
     // Buffer Energetico (100.000 FE capacità, 1.000 FE in, 1.000 FE out per consumo interno)
     public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 1000) {
@@ -229,14 +238,9 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     @Nullable
     public IItemHandler getItemHandler(@Nullable Direction side) {
         if (side == null) {
-            return itemHandler; // Accesso completo dall'interno (opzionale)
+            return itemHandler; // Accesso completo per la GUI
         }
-        
-        if (side == Direction.DOWN) {
-            return outputHandler; // Accesso solo agli slot di output (2, 3) dal basso
-        } else {
-            return inputHandler; // Accesso solo agli slot di input (0, 1) da top e lati
-        }
+        return automationHandler; // Stesso handler per TUTTI i lati (Sopra, Sotto, Nord, Sud, Est, Ovest)
     }
 
     // Metodo helper per Capability Energia

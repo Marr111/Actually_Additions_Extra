@@ -1,7 +1,7 @@
 {
-  "block.processingmod.aa_machine": "Empowerer",
-  "blockentity.processingmod.aa_machine": "Empowerer",
-  "jei.processingmod.aa_machine": "Empowering",
+  "block.processingmod.aa_machine": "Advanced Empowerer",
+  "blockentity.processingmod.aa_machine": "Advanced Empowerer",
+  "jei.processingmod.aa_machine": "Advanced Empowering",
   "item.processingmod.iron_upgrade": "Iron Upgrade",
   "item.processingmod.gold_upgrade": "Gold Upgrade",
   "item.processingmod.diamond_upgrade": "Diamond Upgrade",
