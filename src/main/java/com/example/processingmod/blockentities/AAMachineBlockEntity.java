@@ -23,13 +23,15 @@ import org.jetbrains.annotations.Nullable;
 import com.example.processingmod.recipes.AAMachineRecipe;
 import com.example.processingmod.recipes.AAMachineRecipeInput;
 import com.example.processingmod.recipes.ModRecipes;
+import de.ellpeck.actuallyadditions.mod.crafting.ActuallyRecipes;
+import de.ellpeck.actuallyadditions.mod.crafting.EmpowererRecipe;
 
 import java.util.Optional;
 
 public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
-    // Inventario con 4 slot (0 e 1 input, 2 output, 3 upgrade)
-    public final ItemStackHandler itemHandler = new ItemStackHandler(4) {
+    // Inventario con 7 slot (0-4 input, 5 output, 6 upgrade)
+    public final ItemStackHandler itemHandler = new ItemStackHandler(7) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -37,35 +39,35 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (slot == 3) { // Upgrade
+            if (slot == 6) { // Upgrade
                 return stack.is(com.example.processingmod.items.ModItems.IRON_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.GOLD_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.DIAMOND_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.NETHERITE_UPGRADE.get());
             }
-            if (slot == 2) { // Output
-                return false; // Non permettere l'inserimento negli slot di output
+            if (slot == 5) { // Output
+                return false; 
             }
             return super.isItemValid(slot, stack);
         }
 
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            if (slot < 2) { // Slot Input
-                return ItemStack.EMPTY; // Non permettere l'estrazione dagli slot di input
+            if (slot < 5) { // Slot Input
+                return ItemStack.EMPTY; 
             }
             return super.extractItem(slot, amount, simulate);
         }
 
         @Override
         public int getSlotLimit(int slot) {
-            if (slot == 3) return 1; // Solo un upgrade alla volta
+            if (slot == 6) return 1; // Solo un upgrade alla volta
             return super.getSlotLimit(slot);
         }
     };
 
-    // Wrapper unico per tutti i lati (esclude solo l'upgrade allo slot 3)
-    private final IItemHandler automationHandler = new RangedWrapper(itemHandler, 0, 3);
+    // Wrapper unico per tutti i lati (esclude solo l'upgrade allo slot 6)
+    private final IItemHandler automationHandler = new RangedWrapper(itemHandler, 0, 6);
 
     // Buffer Energetico (100.000 FE capacità, 1.000 FE in, 1.000 FE out per consumo interno)
     public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 1000) {
@@ -127,7 +129,7 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory_v3", itemHandler.serializeNBT(registries));
+        tag.put("inventory_v4", itemHandler.serializeNBT(registries));
         tag.put("energy", energyStorage.serializeNBT(registries));
         tag.putInt("progress", progress);
         tag.putInt("maxProgress", maxProgress);
@@ -136,8 +138,8 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
         super.loadAdditional(tag, registries);
-        if (tag.contains("inventory_v3")) {
-            itemHandler.deserializeNBT(registries, tag.getCompound("inventory_v3"));
+        if (tag.contains("inventory_v4")) {
+            itemHandler.deserializeNBT(registries, tag.getCompound("inventory_v4"));
         }
         if (tag.contains("energy")) {
             energyStorage.deserializeNBT(registries, tag.get("energy"));
@@ -178,18 +180,20 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         if (level.isClientSide()) return; // Esegui solo lato server
 
         boolean isDirty = false;
-        Optional<AAMachineRecipe> recipeOpt = findMatchingRecipe(level);
+        Optional<RecipeHolder<EmpowererRecipe>> recipeOpt = findMatchingRecipe(level);
 
         if (recipeOpt.isPresent()) {
-            AAMachineRecipe recipe = recipeOpt.get();
+            EmpowererRecipe recipe = recipeOpt.get().value();
             
             // Verifica se c'è abbastanza energia ed spazio per l'output
             int multiplier = getSpeedMultiplier();
-            int baseProcessingTime = recipe.processingTime();
-            int energyPerTick = Math.max(1, recipe.energyCost() / baseProcessingTime);
+            int baseProcessingTime = recipe.getTime();
+            // Il costo AA è energyPerStand * 4
+            int totalEnergyCost = recipe.getEnergyPerStand() * 4;
+            int energyPerTick = Math.max(1, totalEnergyCost / baseProcessingTime);
             int actualEnergyConsumption = energyPerTick * multiplier;
 
-            if (hasEnoughEnergy(actualEnergyConsumption) && recipe.canOutput(itemHandler)) {
+            if (hasEnoughEnergy(actualEnergyConsumption) && canFitOutput(recipe)) {
                 maxProgress = baseProcessingTime;
                 consumeEnergy(actualEnergyConsumption);
                 
@@ -220,13 +224,14 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private void craftItem(AAMachineRecipe recipe) {
-        // Rimuovi input
-        itemHandler.extractItem(0, 1, false);
-        itemHandler.extractItem(1, 1, false);
+    private void craftItem(EmpowererRecipe recipe) {
+        // Rimuovi input (5 slot)
+        for (int i = 0; i < 5; i++) {
+            itemHandler.extractItem(i, 1, false);
+        }
 
-        // Aggiungi l'unico output (slot 2)
-        itemHandler.insertItem(2, recipe.result1().copy(), false);
+        // Aggiungi l'output (slot 5)
+        itemHandler.insertItem(5, recipe.getResultItem(level.registryAccess()).copy(), false);
     }
 
     private void resetProgress() {
@@ -263,29 +268,63 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     // ---------------------------------------------------------------
 
     /**
-     * Cerca nel RecipeManager una ricetta compatibile con gli slot 0 e 1 dell'inventario.
-     * Chiamato dal ticker nella fase successiva.
+     * Cerca nel RecipeManager le ricette originali di Actually Additions.
      */
-    public Optional<AAMachineRecipe> findMatchingRecipe(Level level) {
-        AAMachineRecipeInput input = AAMachineRecipeInput.of(itemHandler);
+    public Optional<RecipeHolder<EmpowererRecipe>> findMatchingRecipe(Level level) {
+        ItemStack base = itemHandler.getStackInSlot(0);
+        if (base.isEmpty()) return Optional.empty();
 
-        Optional<AAMachineRecipe> found = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipes.AA_MACHINE_TYPE.get())
-                .stream()
-                .map(RecipeHolder::value)
-                .filter(recipe -> recipe.matches(input, level))
-                .findFirst();
-
-        // --- DEBUG temporaneo: rimuovere in produzione ---
-        if (found.isPresent()) {
-            System.out.println("[processingmod] Ricetta trovata per AA Machine @ " + getBlockPos()
-                    + " → result: " + found.get().result1().getDisplayName().getString());
+        java.util.List<ItemStack> modifiers = new java.util.ArrayList<>();
+        for (int i = 1; i < 5; i++) {
+            ItemStack s = itemHandler.getStackInSlot(i);
+            if (!s.isEmpty()) modifiers.add(s);
         }
 
-        return found;
+        return level.getRecipeManager()
+                .getAllRecipesFor(ActuallyRecipes.Types.EMPOWERING.get())
+                .stream()
+                .filter(holder -> {
+                    EmpowererRecipe r = holder.value();
+                    // Verifica base
+                    if (!r.getInput().test(base)) return false;
+                    
+                    // Verifica modifiers (devono essercene 4 e devono coincidere)
+                    if (modifiers.size() != 4) return false;
+                    
+                    java.util.List<net.minecraft.world.item.crafting.Ingredient> recipeMods = new java.util.ArrayList<>();
+                    recipeMods.add(r.getStandOne());
+                    recipeMods.add(r.getStandTwo());
+                    recipeMods.add(r.getStandThree());
+                    recipeMods.add(r.getStandFour());
+                    
+                    java.util.List<ItemStack> currentMods = new java.util.ArrayList<>(modifiers);
+                    
+                    for (net.minecraft.world.item.crafting.Ingredient ing : recipeMods) {
+                        boolean found = false;
+                        for (int i = 0; i < currentMods.size(); i++) {
+                            if (ing.test(currentMods.get(i))) {
+                                currentMods.remove(i);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) return false;
+                    }
+                    return currentMods.isEmpty();
+                })
+                .findFirst();
     }
+
+    private boolean canFitOutput(EmpowererRecipe recipe) {
+        ItemStack output = recipe.getResultItem(level.registryAccess());
+        ItemStack existing = itemHandler.getStackInSlot(5);
+        if (existing.isEmpty()) return true;
+        if (!ItemStack.isSameItemSameComponents(existing, output)) return false;
+        return existing.getCount() + output.getCount() <= existing.getMaxStackSize();
+    }
+
     private int getSpeedMultiplier() {
-        ItemStack upgrade = itemHandler.getStackInSlot(3);
+        ItemStack upgrade = itemHandler.getStackInSlot(6);
         if (upgrade.is(com.example.processingmod.items.ModItems.IRON_UPGRADE.get())) return 2;
         if (upgrade.is(com.example.processingmod.items.ModItems.GOLD_UPGRADE.get())) return 5;
         if (upgrade.is(com.example.processingmod.items.ModItems.DIAMOND_UPGRADE.get())) return 10;

@@ -64,29 +64,33 @@ public class AAMachineScreen extends AbstractContainerScreen<AAMachineMenu> {
             guiGraphics.fill(slotX + 1, slotY + 1, slotX + 17, slotY + 17, 0xFF1A1A1A);
         }
 
-        // Sfondi slot macchina (Input)
-        renderSlot(guiGraphics, x + 43, y + 29);
-        renderSlot(guiGraphics, x + 61, y + 29);
-        // Sfondo slot macchina (Output) - Allineato
-        renderSlot(guiGraphics, x + 115, y + 29);
-
-        // Sfondo slot macchina (Upgrade) - Sotto la freccia
-        renderSlot(guiGraphics, x + 84, y + 51);
-
-        // Barra del progresso (Sfondo)
-        guiGraphics.fill(x + 85, y + 31, x + 109, y + 47, 0xFF1A1A1A);
-        // Disegna progresso attivo
-        if (menu.isCrafting()) {
-            int progress = menu.getScaledProgress();
-            guiGraphics.fill(x + 85, y + 31, x + 85 + progress, y + 47, 0xFF00BFFF); // Azzurro/Ciano
-        }
-
-        // Barra energia (Sfondo)
-        guiGraphics.fill(x + 10, y + 6, x + 20, y + 70, 0xFF1A1A1A);
+        // Barra energia (Sfondo) - Spostata leggermente a sinistra
+        guiGraphics.fill(x + 6, y + 6, x + 16, y + 70, 0xFF1A1A1A);
         // Disegna energia attiva
         int energy = menu.getScaledEnergy();
         if (energy > 0) {
-            guiGraphics.fill(x + 10, y + 70 - energy, x + 20, y + 70, 0xFFFE3D3D); // Rosso scuro energia
+            guiGraphics.fill(x + 6, y + 70 - energy, x + 16, y + 70, 0xFFFE3D3D); // Rosso scuro energia
+        }
+
+        // Sfondi slot macchina (5 Input)
+        renderSlot(guiGraphics, x + 19, y + 29);
+        renderSlot(guiGraphics, x + 37, y + 29);
+        renderSlot(guiGraphics, x + 55, y + 29);
+        renderSlot(guiGraphics, x + 73, y + 29);
+        renderSlot(guiGraphics, x + 91, y + 29);
+
+        // Sfondo slot macchina (Output)
+        renderSlot(guiGraphics, x + 139, y + 29);
+
+        // Sfondo slot macchina (Upgrade)
+        renderSlot(guiGraphics, x + 79, y + 51);
+
+        // Barra del progresso (Sfondo) - Spostata a destra dei 5 slot
+        guiGraphics.fill(x + 112, y + 31, x + 136, y + 47, 0xFF1A1A1A);
+        // Disegna progresso attivo
+        if (menu.isCrafting()) {
+            int progress = menu.getScaledProgress();
+            guiGraphics.fill(x + 112, y + 31, x + 112 + progress, y + 47, 0xFF00BFFF); // Azzurro/Ciano
         }
     }
 
@@ -101,7 +105,7 @@ public class AAMachineScreen extends AbstractContainerScreen<AAMachineMenu> {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        if (mouseX >= x + 10 && mouseX <= x + 20 && mouseY >= y + 6 && mouseY <= y + 70) {
+        if (mouseX >= x + 6 && mouseX <= x + 16 && mouseY >= y + 6 && mouseY <= y + 70) {
             Component text = Component.literal("Energy: " + menu.getEnergy() + " / " + menu.getMaxEnergy() + " FE");
             guiGraphics.renderTooltip(this.font, text, mouseX, mouseY);
         }

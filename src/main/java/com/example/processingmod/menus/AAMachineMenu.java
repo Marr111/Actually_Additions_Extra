@@ -31,7 +31,7 @@ public class AAMachineMenu extends AbstractContainerMenu {
     // Costruttore Server (chiamato dalla BlockEntity)
     public AAMachineMenu(int containerId, Inventory inv, BlockEntity entity, ContainerData data) {
         super(ModMenus.AA_MACHINE_MENU.get(), containerId);
-        checkContainerSize(inv, 4);
+        checkContainerSize(inv, 7);
         blockEntity = (AAMachineBlockEntity) entity;
         this.levelAccess = ContainerLevelAccess.create(blockEntity.getLevel(), blockEntity.getBlockPos());
         this.data = data;
@@ -47,15 +47,19 @@ public class AAMachineMenu extends AbstractContainerMenu {
 
     private void addMachineSlots() {
         IItemHandler handler = blockEntity.getItemHandler(null);
-        // Slot Input (0 e 1)
-        this.addSlot(new SlotItemHandler(handler, 0, 44, 30));
-        this.addSlot(new SlotItemHandler(handler, 1, 62, 30));
-        // Slot Output (2) - Allineato
-        this.addSlot(new SlotItemHandler(handler, 2, 116, 30) {
+        // 5 Slot Input (0-4) allineati
+        this.addSlot(new SlotItemHandler(handler, 0, 20, 30));
+        this.addSlot(new SlotItemHandler(handler, 1, 38, 30));
+        this.addSlot(new SlotItemHandler(handler, 2, 56, 30));
+        this.addSlot(new SlotItemHandler(handler, 3, 74, 30));
+        this.addSlot(new SlotItemHandler(handler, 4, 92, 30));
+
+        // Slot Output (5)
+        this.addSlot(new SlotItemHandler(handler, 5, 140, 30) {
             @Override public boolean mayPlace(ItemStack stack) { return false; } // Solo output
         });
-        // Slot Upgrade (3) - Sotto la freccia
-        this.addSlot(new SlotItemHandler(handler, 3, 85, 52));
+        // Slot Upgrade (6) - Sotto
+        this.addSlot(new SlotItemHandler(handler, 6, 80, 52));
     }
 
     private void addPlayerInventory() {
@@ -108,25 +112,25 @@ public class AAMachineMenu extends AbstractContainerMenu {
         ItemStack sourceStack = sourceSlot.getItem();
         ItemStack copyOfSourceStack = sourceStack.copy();
 
-        // 4 slot macchina (0,1,2,3), gli altri 36 sono inv player (4-39)
-        if (index < 4) {
+        // 7 slot macchina (0-6), gli altri 36 sono inv player (7-42)
+        if (index < 7) {
             // Dalla macchina al giocatore
-            if (!moveItemStackTo(sourceStack, 4, 40, false)) {
+            if (!moveItemStackTo(sourceStack, 7, 43, false)) {
                 return ItemStack.EMPTY;
             }
         } else {
             // Dal giocatore alla macchina
-            // Se è un upgrade, prova a metterlo nello slot 3
+            // Se è un upgrade, prova a metterlo nello slot 6
             if (isUpgrade(sourceStack)) {
-                if (!moveItemStackTo(sourceStack, 3, 4, false)) {
-                    // Se lo slot upgrade è pieno, prova gli input (opzionale)
-                    if (!moveItemStackTo(sourceStack, 0, 2, false)) {
+                if (!moveItemStackTo(sourceStack, 6, 7, false)) {
+                    // Se lo slot upgrade è pieno, prova gli input
+                    if (!moveItemStackTo(sourceStack, 0, 5, false)) {
                         return ItemStack.EMPTY;
                     }
                 }
             } else {
                 // Altrimenti prova gli slot input
-                if (!moveItemStackTo(sourceStack, 0, 2, false)) {
+                if (!moveItemStackTo(sourceStack, 0, 5, false)) {
                     return ItemStack.EMPTY;
                 }
             }

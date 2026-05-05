@@ -1,6 +1,6 @@
-# AA Extra (Actually Additions Extra)
+# Actually Additions Extra
 
-AA Extra is a NeoForge 1.21.1 addon for Actually Additions that introduces the **Advanced Empowerer**, a more powerful and automatable version of the classic Empowerer machine.
+Actually Additions Extra is a NeoForge 1.21.1 addon for Actually Additions that introduces the **Advanced Empowerer**, a more powerful and automatable version of the classic Empowerer machine.
 
 ## Features
 
