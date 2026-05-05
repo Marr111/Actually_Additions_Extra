@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "G G",
+    " U ",
+    "G G"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "U": {
+      "item": "processingmod:iron_upgrade"
+    }
+  },
+  "result": {
+    "id": "processingmod:gold_upgrade"
+  }
+}

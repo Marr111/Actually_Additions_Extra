@@ -9,6 +9,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -27,20 +28,38 @@ import java.util.Optional;
 
 public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
-    // Inventario con 4 slot (0 e 1 input, 2 e 3 output)
+    // Inventario con 4 slot (0 e 1 input, 2 output, 3 upgrade)
     public final ItemStackHandler itemHandler = new ItemStackHandler(4) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
         }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            if (slot == 3) {
+                return stack.is(com.example.processingmod.items.ModItems.IRON_UPGRADE.get()) ||
+                       stack.is(com.example.processingmod.items.ModItems.GOLD_UPGRADE.get()) ||
+                       stack.is(com.example.processingmod.items.ModItems.DIAMOND_UPGRADE.get()) ||
+                       stack.is(com.example.processingmod.items.ModItems.NETHERITE_UPGRADE.get());
+            }
+            return super.isItemValid(slot, stack);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            if (slot == 3) return 1; // Solo un upgrade alla volta
+            return super.getSlotLimit(slot);
+        }
     };
 
     // Wrappers per limitare l'accesso in base al lato
     private final IItemHandler inputHandler = new RangedWrapper(itemHandler, 0, 2);
-    private final IItemHandler outputHandler = new RangedWrapper(itemHandler, 2, 4);
+    private final IItemHandler outputHandler = new RangedWrapper(itemHandler, 2, 3);
+    private final IItemHandler upgradeHandler = new RangedWrapper(itemHandler, 3, 4);
 
-    // Buffer Energetico (100.000 FE capacità, 1.000 FE in, 0 FE out)
-    public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 0) {
+    // Buffer Energetico (100.000 FE capacità, 1.000 FE in, 1.000 FE out per consumo interno)
+    public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 1000) {
         @Override
         public int receiveEnergy(int maxReceive, boolean simulate) {
             int received = super.receiveEnergy(maxReceive, simulate);
@@ -60,6 +79,38 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    // Variabili di processing
+    private int progress = 0;
+    private int maxProgress = 0;
+
+    // ContainerData per sincronizzare int verso il client (GUI)
+    protected final net.minecraft.world.inventory.ContainerData data = new net.minecraft.world.inventory.ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> progress;
+                case 1 -> maxProgress;
+                case 2 -> energyStorage.getEnergyStored();
+                case 3 -> energyStorage.getMaxEnergyStored();
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> progress = value;
+                case 1 -> maxProgress = value;
+                // Energia in genere non si imposta dalla GUI al server, quindi skippiamo
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 4;
+        }
+    };
+
     public AAMachineBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.AA_MACHINE_BE.get(), pos, state);
     }
@@ -67,17 +118,36 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("inventory", itemHandler.serializeNBT(registries));
+        tag.put("inventory_v3", itemHandler.serializeNBT(registries));
         tag.put("energy", energyStorage.serializeNBT(registries));
+        tag.putInt("progress", progress);
+        tag.putInt("maxProgress", maxProgress);
     }
 
     @Override
     protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
         super.loadAdditional(tag, registries);
-        itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
+        if (tag.contains("inventory_v3")) {
+            itemHandler.deserializeNBT(registries, tag.getCompound("inventory_v3"));
+        }
         if (tag.contains("energy")) {
             energyStorage.deserializeNBT(registries, tag.get("energy"));
         }
+        progress = tag.getInt("progress");
+        maxProgress = tag.getInt("maxProgress");
+    }
+
+    @Override
+    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider registries) {
+        CompoundTag tag = new CompoundTag();
+        saveAdditional(tag, registries);
+        return tag;
+    }
+
+    @Nullable
+    @Override
+    public net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
@@ -88,8 +158,71 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int containerId, @NotNull Inventory playerInventory, @NotNull Player player) {
-        // Ritornerà il Menu nella fase successiva
-        return null;
+        return new com.example.processingmod.menus.AAMachineMenu(containerId, playerInventory, this, this.data);
+    }
+
+    // ---------------------------------------------------------------
+    // Logica di Processing (Ticker)
+    // ---------------------------------------------------------------
+
+    public void tick(Level level, BlockPos pos, BlockState state) {
+        if (level.isClientSide()) return; // Esegui solo lato server
+
+        boolean isDirty = false;
+        Optional<AAMachineRecipe> recipeOpt = findMatchingRecipe(level);
+
+        if (recipeOpt.isPresent()) {
+            AAMachineRecipe recipe = recipeOpt.get();
+            
+            // Verifica se c'è abbastanza energia ed spazio per l'output
+            int multiplier = getSpeedMultiplier();
+            int baseProcessingTime = recipe.processingTime();
+            int energyPerTick = Math.max(1, recipe.energyCost() / baseProcessingTime);
+            int actualEnergyConsumption = energyPerTick * multiplier;
+
+            if (hasEnoughEnergy(actualEnergyConsumption) && recipe.canOutput(itemHandler)) {
+                maxProgress = baseProcessingTime;
+                consumeEnergy(actualEnergyConsumption);
+                
+                // Applica il moltiplicatore di velocità
+                progress += multiplier;
+                isDirty = true;
+
+                if (progress >= maxProgress) {
+                    craftItem(recipe);
+                    resetProgress();
+                }
+            } else {
+                if (progress > 0) {
+                    resetProgress();
+                    isDirty = true;
+                }
+            }
+        } else {
+            if (progress > 0) {
+                resetProgress();
+                isDirty = true;
+            }
+        }
+
+        if (isDirty) {
+            setChanged(level, pos, state);
+            level.sendBlockUpdated(pos, state, state, 3);
+        }
+    }
+
+    private void craftItem(AAMachineRecipe recipe) {
+        // Rimuovi input
+        itemHandler.extractItem(0, 1, false);
+        itemHandler.extractItem(1, 1, false);
+
+        // Aggiungi l'unico output (slot 2)
+        itemHandler.insertItem(2, recipe.result1().copy(), false);
+    }
+
+    private void resetProgress() {
+        progress = 0;
+        maxProgress = 0;
     }
 
     // Metodo helper chiamato dal RegisterCapabilitiesEvent
@@ -146,5 +279,13 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         return found;
+    }
+    private int getSpeedMultiplier() {
+        ItemStack upgrade = itemHandler.getStackInSlot(3);
+        if (upgrade.is(com.example.processingmod.items.ModItems.IRON_UPGRADE.get())) return 2;
+        if (upgrade.is(com.example.processingmod.items.ModItems.GOLD_UPGRADE.get())) return 5;
+        if (upgrade.is(com.example.processingmod.items.ModItems.DIAMOND_UPGRADE.get())) return 10;
+        if (upgrade.is(com.example.processingmod.items.ModItems.NETHERITE_UPGRADE.get())) return 20;
+        return 1; // Velocità base
     }
 }

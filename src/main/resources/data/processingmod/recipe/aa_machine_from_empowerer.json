@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EEE",
+    "EXE",
+    "EEE"
+  ],
+  "key": {
+    "E": {
+      "item": "processingmod:elite_coil"
+    },
+    "X": {
+      "item": "actuallyadditions:empowerer"
+    }
+  },
+  "result": {
+    "id": "processingmod:aa_machine"
+  }
+}

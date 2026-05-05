@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "N N",
+    " U ",
+    "N N"
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "U": {
+      "item": "processingmod:diamond_upgrade"
+    }
+  },
+  "result": {
+    "id": "processingmod:netherite_upgrade"
+  }
+}

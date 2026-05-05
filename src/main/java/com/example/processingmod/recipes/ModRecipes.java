@@ -1,4 +1,4 @@
-3package com.example.processingmod.recipes;
+package com.example.processingmod.recipes;
 
 import com.example.processingmod.ModRegistries;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -13,13 +13,7 @@ public class ModRecipes {
                     net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("processingmod", "aa_machine")
             ));
 
-    // RecipeSerializer
+    // RecipeSerializer<AAMachineRecipe> — usa la nostra classe dedicata
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<AAMachineRecipe>> AA_MACHINE_SERIALIZER =
-            ModRegistries.RECIPE_SERIALIZERS.register("aa_machine", () ->
-                    new net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<>(null) {
-                        // Placeholder — sovrascriviamo con AAMachineRecipeSerializer
-                        @Override public com.mojang.serialization.MapCodec<AAMachineRecipe> codec() { return AAMachineRecipe.CODEC; }
-                        @Override public net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, AAMachineRecipe> streamCodec() { return AAMachineRecipe.STREAM_CODEC; }
-                    }
-            );
+            ModRegistries.RECIPE_SERIALIZERS.register("aa_machine", AAMachineRecipeSerializer::new);
 }

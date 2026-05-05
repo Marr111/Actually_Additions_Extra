@@ -13,5 +13,11 @@ public class ModCreativeTabs {
             .displayItems((parameters, output) -> {
                 // Qui aggiungiamo gli item al tab
                 output.accept(ModItems.AA_MACHINE_ITEM.get());
+                output.accept(ModItems.IRON_UPGRADE.get());
+                output.accept(ModItems.GOLD_UPGRADE.get());
+                output.accept(ModItems.DIAMOND_UPGRADE.get());
+                output.accept(ModItems.NETHERITE_UPGRADE.get());
+                output.accept(ModItems.DIAMOND_NUGGET.get());
+                output.accept(ModItems.ELITE_COIL.get());
             }).build());
 }

@@ -25,6 +25,7 @@ public class ModRegistries {
         Object dummyItems = com.example.processingmod.items.ModItems.AA_MACHINE_ITEM;
         Object dummyTabs = com.example.processingmod.tabs.ModCreativeTabs.PROCESSING_TAB;
         Object dummyRecipes = com.example.processingmod.recipes.ModRecipes.AA_MACHINE_TYPE;
+        Object dummyMenus = com.example.processingmod.menus.ModMenus.AA_MACHINE_MENU;
 
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);

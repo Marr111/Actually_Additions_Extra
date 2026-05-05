@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DDD",
+    "DCD",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "C": {
+      "item": "actuallyadditions:advanced_coil"
+    }
+  },
+  "result": {
+    "id": "processingmod:elite_coil"
+  }
+}

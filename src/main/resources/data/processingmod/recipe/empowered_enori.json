@@ -1,8 +1,15 @@
 {
   "type": "processingmod:aa_machine",
-  "ingredient1": { "item": "actuallyadditions:enori_crystal" },
-  "ingredient2": { "item": "minecraft:iron_block" },
-  "result1": { "id": "actuallyadditions:empowered_enori_crystal", "count": 1 },
-  "energy_cost": 10000,
+  "ingredient1": {
+    "item": "actuallyadditions:enori_crystal"
+  },
+  "ingredient2": {
+    "item": "minecraft:iron_block"
+  },
+  "result1": {
+    "id": "actuallyadditions:empowered_enori_crystal",
+    "count": 1
+  },
+  "energy_cost": 1000,
   "processing_time": 200
 }

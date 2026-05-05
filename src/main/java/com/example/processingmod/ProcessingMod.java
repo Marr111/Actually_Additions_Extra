@@ -31,4 +31,12 @@ public class ProcessingMod {
                 (blockEntity, side) -> blockEntity.getEnergyStorage(side)
         );
     }
+
+    @net.neoforged.fml.common.EventBusSubscriber(modid = MODID, bus = net.neoforged.fml.common.EventBusSubscriber.Bus.MOD, value = net.neoforged.api.distmarker.Dist.CLIENT)
+    public static class ClientModEvents {
+        @net.neoforged.bus.api.SubscribeEvent
+        public static void registerScreens(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
+            event.register(com.example.processingmod.menus.ModMenus.AA_MACHINE_MENU.get(), com.example.processingmod.screens.AAMachineScreen::new);
+        }
+    }
 }

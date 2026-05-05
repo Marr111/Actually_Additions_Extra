@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I C I",
+    "R E R",
+    "I C I"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "C": {
+      "item": "actuallyadditions:basic_coil"
+    },
+    "R": {
+      "item": "actuallyadditions:restonia_crystal"
+    },
+    "E": {
+      "item": "actuallyadditions:empowered_restonia_crystal"
+    }
+  },
+  "result": {
+    "id": "processingmod:aa_machine",
+    "count": 1
+  }
+}
