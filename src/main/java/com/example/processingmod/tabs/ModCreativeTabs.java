@@ -17,7 +17,6 @@ public class ModCreativeTabs {
                 output.accept(ModItems.GOLD_UPGRADE.get());
                 output.accept(ModItems.DIAMOND_UPGRADE.get());
                 output.accept(ModItems.NETHERITE_UPGRADE.get());
-                output.accept(ModItems.DIAMOND_NUGGET.get());
                 output.accept(ModItems.ELITE_COIL.get());
             }).build());
 }

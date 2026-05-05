@@ -18,7 +18,6 @@ Enhance your Advanced Empowerer with modular microchips:
 
 ### 💎 New Components
 - **Elite Coil**: A high-tier crafting component for the Advanced Empowerer.
-- **Diamond Nuggets**: Small fragments of diamonds used in high-tech recipes.
 
 ## Installation & Availability
 This mod is designed for **NeoForge 1.21.1**. 

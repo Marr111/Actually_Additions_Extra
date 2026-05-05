@@ -15,6 +15,5 @@ public class ModItems {
     public static final DeferredItem<Item> DIAMOND_UPGRADE = ModRegistries.ITEMS.register("diamond_upgrade", () -> new Item(new Item.Properties()));
     public static final DeferredItem<Item> NETHERITE_UPGRADE = ModRegistries.ITEMS.register("netherite_upgrade", () -> new Item(new Item.Properties()));
 
-    public static final DeferredItem<Item> DIAMOND_NUGGET = ModRegistries.ITEMS.register("diamond_nugget", () -> new Item(new Item.Properties()));
     public static final DeferredItem<Item> ELITE_COIL = ModRegistries.ITEMS.register("elite_coil", () -> new Item(new Item.Properties()));
 }
