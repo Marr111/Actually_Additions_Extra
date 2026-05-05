@@ -1,25 +1,34 @@
+# AA Extra (Actually Additions Extra)
 
-Installation information
-=======
+AA Extra is a NeoForge 1.21.1 addon for Actually Additions that introduces the **Advanced Empowerer**, a more powerful and automatable version of the classic Empowerer machine.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## Features
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+### ⚡ Advanced Empowerer
+The core of the mod. This machine allows you to perform empowering recipes with significantly higher speeds and full automation support.
+- **Universal Automation**: Input and output from any side!
+- **Energy Efficient**: Consumes 1000 FE per crafting operation, with consumption scaling based on speed upgrades.
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+### 🚀 Upgrade System
+Enhance your Advanced Empowerer with modular microchips:
+- **Iron Upgrade**: 2x Speed
+- **Gold Upgrade**: 5x Speed
+- **Diamond Upgrade**: 10x Speed
+- **Netherite Upgrade**: 20x Speed
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+### 💎 New Components
+- **Elite Coil**: A high-tier crafting component for the Advanced Empowerer.
+- **Diamond Nuggets**: Small fragments of diamonds used in high-tech recipes.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+## Installation & Availability
+This mod is designed for **NeoForge 1.21.1**. 
+
+The mod will be available soon on **CurseForge**!
+[Link to CurseForge (Coming Soon)](https://www.curseforge.com/minecraft/mc-mods/aa-extra)
+
+## License
+This project is licensed under the **MIT License**. See the `LICENSE.txt` file for details.
+Portions of the project are based on the NeoForged MDK template.
+
+---
+*Created by Matteo*
