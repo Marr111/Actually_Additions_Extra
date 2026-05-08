@@ -2,11 +2,11 @@ package com.example.processingmod.integration.jei;
 
 import com.example.processingmod.ProcessingMod;
 import com.example.processingmod.blocks.ModBlocks;
-import de.ellpeck.actuallyadditions.mod.crafting.EmpowererRecipe;
+import de.ellpeck.actuallyadditions.mod.jei.JEIActuallyAdditionsPlugin;
+
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
-import mezz.jei.api.recipe.RecipeType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -15,9 +15,6 @@ import org.jetbrains.annotations.NotNull;
 @JeiPlugin
 public class ModJeiPlugin implements IModPlugin {
 
-    // L'ID del tipo di ricetta di Actually Additions per l'Empowerer
-    public static final RecipeType<EmpowererRecipe> AA_EMPOWERING_TYPE = RecipeType.create("actuallyadditions", "empowering", EmpowererRecipe.class);
-
     @Override
     public @NotNull ResourceLocation getPluginUid() {
         return ResourceLocation.fromNamespaceAndPath(ProcessingMod.MODID, "jei_plugin");
@@ -25,6 +22,6 @@ public class ModJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(ModBlocks.AA_MACHINE.get()), AA_EMPOWERING_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.AA_MACHINE.get()), JEIActuallyAdditionsPlugin.EMPOWERER);
     }
 }

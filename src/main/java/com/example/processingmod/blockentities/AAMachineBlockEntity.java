@@ -41,18 +41,10 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
                        stack.is(com.example.processingmod.items.ModItems.DIAMOND_UPGRADE.get()) ||
                        stack.is(com.example.processingmod.items.ModItems.NETHERITE_UPGRADE.get());
             }
-            if (slot == 5) { // Output
-                return false; 
+            if (slot == 5) { // Output - non si può inserire manualmente
+                return false;
             }
             return super.isItemValid(slot, stack);
-        }
-
-        @Override
-        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            if (slot < 5) { // Slot Input
-                return ItemStack.EMPTY; 
-            }
-            return super.extractItem(slot, amount, simulate);
         }
 
         @Override
@@ -62,8 +54,23 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    // Wrapper unico per tutti i lati (esclude solo l'upgrade allo slot 6)
-    private final IItemHandler automationHandler = new RangedWrapper(itemHandler, 0, 6);
+    // Handler per automazione esterna: blocca estrazione dagli slot input (0-4), consente solo dallo slot output (5).
+    // NON usato dalla GUI (che usa itemHandler direttamente per consentire la rimozione manuale).
+    private final IItemHandler automationHandler = new net.neoforged.neoforge.items.wrapper.RangedWrapper(itemHandler, 0, 6) {
+        @Override
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+            // L'automazione può estrarre solo dallo slot output (5)
+            if (slot < 5) return ItemStack.EMPTY;
+            return super.extractItem(slot, amount, simulate);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            // L'automazione non può inserire nello slot output
+            if (slot == 5) return false;
+            return super.isItemValid(slot, stack);
+        }
+    };
 
     // Buffer Energetico (100.000 FE capacità, 1.000 FE in, 1.000 FE out per consumo interno)
     public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 1000) {
@@ -221,12 +228,13 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void craftItem(EmpowererRecipe recipe) {
-        // Rimuovi input (5 slot)
+        // Rimuovi un item da ciascuno degli slot di input (0-4)
         for (int i = 0; i < 5; i++) {
-            itemHandler.getStackInSlot(i).shrink(1);
+            ItemStack s = itemHandler.getStackInSlot(i);
+            if (!s.isEmpty()) s.shrink(1);
         }
 
-        // Aggiungi l'output (slot 5)
+        // Aggiungi l'output nello slot 5 bypassando isItemValid
         ItemStack output = recipe.getResultItem(this.level.registryAccess()).copy();
         ItemStack existing = itemHandler.getStackInSlot(5);
         if (existing.isEmpty()) {
@@ -273,48 +281,68 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
      * Cerca nel RecipeManager le ricette originali di Actually Additions.
      */
     public Optional<RecipeHolder<EmpowererRecipe>> findMatchingRecipe(Level level) {
-        ItemStack base = itemHandler.getStackInSlot(0);
-        if (base.isEmpty()) return Optional.empty();
-
-        java.util.List<ItemStack> modifiers = new java.util.ArrayList<>();
-        for (int i = 1; i < 5; i++) {
-            ItemStack s = itemHandler.getStackInSlot(i);
-            if (!s.isEmpty()) modifiers.add(s);
+        // Raccogliamo i 5 slot di input (skip quelli vuoti per ora)
+        ItemStack[] slots = new ItemStack[5];
+        for (int i = 0; i < 5; i++) {
+            slots[i] = itemHandler.getStackInSlot(i);
         }
 
-        return level.getRecipeManager()
-                .getAllRecipesFor(ActuallyRecipes.Types.EMPOWERING.get())
-                .stream()
-                .filter(holder -> {
-                    EmpowererRecipe r = holder.value();
-                    // Verifica base
-                    if (!r.getInput().test(base)) return false;
-                    
-                    // Verifica modifiers (devono essercene 4 e devono coincidere)
-                    if (modifiers.size() != 4) return false;
-                    
-                    java.util.List<net.minecraft.world.item.crafting.Ingredient> recipeMods = new java.util.ArrayList<>();
-                    recipeMods.add(r.getStandOne());
-                    recipeMods.add(r.getStandTwo());
-                    recipeMods.add(r.getStandThree());
-                    recipeMods.add(r.getStandFour());
-                    
-                    java.util.List<ItemStack> currentMods = new java.util.ArrayList<>(modifiers);
-                    
-                    for (net.minecraft.world.item.crafting.Ingredient ing : recipeMods) {
-                        boolean found = false;
-                        for (int i = 0; i < currentMods.size(); i++) {
-                            if (ing.test(currentMods.get(i))) {
-                                currentMods.remove(i);
-                                found = true;
-                                break;
+        // Dobbiamo avere esattamente 5 item totali (1 base + 4 modifier)
+        int filledCount = 0;
+        for (ItemStack s : slots) {
+            if (!s.isEmpty()) filledCount++;
+        }
+        if (filledCount != 5) return Optional.empty();
+
+        // Proviamo ciascuno dei 5 slot come possibile base item
+        for (int baseSlot = 0; baseSlot < 5; baseSlot++) {
+            ItemStack base = slots[baseSlot];
+            if (base.isEmpty()) continue;
+
+            final int finalBaseSlot = baseSlot;
+
+            // Raccogliamo i modifier (tutti gli altri 4 slot)
+            java.util.List<ItemStack> modifiers = new java.util.ArrayList<>();
+            for (int i = 0; i < 5; i++) {
+                if (i != finalBaseSlot) modifiers.add(slots[i]);
+            }
+
+            Optional<RecipeHolder<EmpowererRecipe>> result = level.getRecipeManager()
+                    .getAllRecipesFor(ActuallyRecipes.Types.EMPOWERING.get())
+                    .stream()
+                    .filter(holder -> {
+                        EmpowererRecipe r = holder.value();
+                        // Verifica base
+                        if (!r.getInput().test(base)) return false;
+
+                        // Verifica i 4 modifier in qualsiasi ordine
+                        java.util.List<net.minecraft.world.item.crafting.Ingredient> recipeMods = new java.util.ArrayList<>();
+                        recipeMods.add(r.getStandOne());
+                        recipeMods.add(r.getStandTwo());
+                        recipeMods.add(r.getStandThree());
+                        recipeMods.add(r.getStandFour());
+
+                        java.util.List<ItemStack> currentMods = new java.util.ArrayList<>(modifiers);
+
+                        for (net.minecraft.world.item.crafting.Ingredient ing : recipeMods) {
+                            boolean found = false;
+                            for (int i = 0; i < currentMods.size(); i++) {
+                                if (ing.test(currentMods.get(i))) {
+                                    currentMods.remove(i);
+                                    found = true;
+                                    break;
+                                }
                             }
+                            if (!found) return false;
                         }
-                        if (!found) return false;
-                    }
-                    return currentMods.isEmpty();
-                })
-                .findFirst();
+                        return currentMods.isEmpty();
+                    })
+                    .findFirst();
+
+            if (result.isPresent()) return result;
+        }
+
+        return Optional.empty();
     }
 
     private boolean canFitOutput(EmpowererRecipe recipe) {
