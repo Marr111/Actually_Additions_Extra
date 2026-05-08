@@ -25,7 +25,7 @@ public class AAMachineMenu extends AbstractContainerMenu {
 
     // Costruttore Client (usato dalla registrazione menu)
     public AAMachineMenu(int containerId, Inventory inv, net.minecraft.network.RegistryFriendlyByteBuf buf) {
-        this(containerId, inv, inv.player.level().getBlockEntity(buf.readBlockPos()), new SimpleContainerData(4));
+        this(containerId, inv, inv.player.level().getBlockEntity(buf.readBlockPos()), new SimpleContainerData(6));
     }
 
     // Costruttore Server (chiamato dalla BlockEntity)
@@ -46,19 +46,19 @@ public class AAMachineMenu extends AbstractContainerMenu {
 
     private void addMachineSlots() {
         IItemHandler handler = blockEntity.getItemHandler(null);
-        // 5 Slot Input (0-4) allineati
-        this.addSlot(new SlotItemHandler(handler, 0, 20, 30));
-        this.addSlot(new SlotItemHandler(handler, 1, 38, 30));
-        this.addSlot(new SlotItemHandler(handler, 2, 56, 30));
-        this.addSlot(new SlotItemHandler(handler, 3, 74, 30));
-        this.addSlot(new SlotItemHandler(handler, 4, 92, 30));
+        // 5 Slot Input (0-4) allineati al centro
+        this.addSlot(new SlotItemHandler(handler, 0, 28, 26));
+        this.addSlot(new SlotItemHandler(handler, 1, 46, 26));
+        this.addSlot(new SlotItemHandler(handler, 2, 64, 26));
+        this.addSlot(new SlotItemHandler(handler, 3, 82, 26));
+        this.addSlot(new SlotItemHandler(handler, 4, 100, 26));
 
         // Slot Output (5)
-        this.addSlot(new SlotItemHandler(handler, 5, 140, 30) {
+        this.addSlot(new SlotItemHandler(handler, 5, 148, 26) {
             @Override public boolean mayPlace(ItemStack stack) { return false; } // Solo output
         });
-        // Slot Upgrade (6) - Sotto
-        this.addSlot(new SlotItemHandler(handler, 6, 80, 52));
+        // Slot Upgrade (6) - Sotto lo slot centrale
+        this.addSlot(new SlotItemHandler(handler, 6, 64, 48));
     }
 
     private void addPlayerInventory() {
@@ -81,27 +81,27 @@ public class AAMachineMenu extends AbstractContainerMenu {
     public int getScaledProgress() {
         int progress = data.get(0);
         int maxProgress = data.get(1);
-        int arrowPixelSize = 24; // Dimensione freccia GUI
+        int arrowPixelSize = 22; // Dimensione freccia GUI
 
         if (maxProgress == 0 || progress == 0) return 0;
         return progress * arrowPixelSize / maxProgress;
     }
 
     public int getScaledEnergy() {
-        int energy = data.get(2);
-        int maxEnergy = data.get(3);
-        int barPixelSize = 64; // Dimensione barra GUI
+        int energy = getEnergy();
+        int maxEnergy = getMaxEnergy();
+        int barPixelSize = 62; // y+8 a y+70 = 62px
 
         if (maxEnergy == 0 || energy == 0) return 0;
         return (int) (((float) energy / maxEnergy) * barPixelSize);
     }
 
     public int getEnergy() {
-        return data.get(2);
+        return (data.get(3) << 16) | (data.get(2) & 0xFFFF);
     }
 
     public int getMaxEnergy() {
-        return data.get(3);
+        return (data.get(5) << 16) | (data.get(4) & 0xFFFF);
     }
 
     @Override

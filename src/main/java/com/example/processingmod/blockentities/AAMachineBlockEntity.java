@@ -16,7 +16,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.RangedWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import de.ellpeck.actuallyadditions.mod.crafting.ActuallyRecipes;
@@ -49,8 +48,9 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public int getSlotLimit(int slot) {
+            if (slot < 5) return 1;  // Slot input: un solo item alla volta
             if (slot == 6) return 1; // Solo un upgrade alla volta
-            return super.getSlotLimit(slot);
+            return super.getSlotLimit(slot); // Slot output (5): stack normale
         }
     };
 
@@ -73,7 +73,8 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     };
 
     // Buffer Energetico (100.000 FE capacità, 1.000 FE in, 1.000 FE out per consumo interno)
-    public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 1000) {
+    // maxReceive=1000 FE/t (velocità cavi dall'esterno), maxExtract=100000 (consumo interno illimitato)
+    public final net.neoforged.neoforge.energy.EnergyStorage energyStorage = new net.neoforged.neoforge.energy.EnergyStorage(100000, 1000, 100000) {
         @Override
         public int receiveEnergy(int maxReceive, boolean simulate) {
             int received = super.receiveEnergy(maxReceive, simulate);
@@ -104,8 +105,10 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
             return switch (index) {
                 case 0 -> progress;
                 case 1 -> maxProgress;
-                case 2 -> energyStorage.getEnergyStored();
-                case 3 -> energyStorage.getMaxEnergyStored();
+                case 2 -> energyStorage.getEnergyStored() & 0xFFFF; // low 16 bit
+                case 3 -> (energyStorage.getEnergyStored() >> 16) & 0xFFFF; // high 16 bit
+                case 4 -> energyStorage.getMaxEnergyStored() & 0xFFFF; // low 16 bit
+                case 5 -> (energyStorage.getMaxEnergyStored() >> 16) & 0xFFFF; // high 16 bit
                 default -> 0;
             };
         }
@@ -121,7 +124,7 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public int getCount() {
-            return 4;
+            return 6;
         }
     };
 
@@ -187,8 +190,7 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
         if (recipeOpt.isPresent()) {
             EmpowererRecipe recipe = recipeOpt.get().value();
-            
-            // Verifica se c'è abbastanza energia ed spazio per l'output
+
             int multiplier = getSpeedMultiplier();
             int baseProcessingTime = recipe.getTime();
             // Il costo AA è energyPerStand * 4
@@ -196,11 +198,15 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
             int energyPerTick = Math.max(1, totalEnergyCost / baseProcessingTime);
             int actualEnergyConsumption = energyPerTick * multiplier;
 
-            if (hasEnoughEnergy(actualEnergyConsumption) && canFitOutput(recipe)) {
+            // Aggiorna sempre maxProgress in base alla ricetta corrente
+            if (maxProgress != baseProcessingTime) {
                 maxProgress = baseProcessingTime;
+                isDirty = true;
+            }
+
+            if (hasEnoughEnergy(actualEnergyConsumption) && canFitOutput(recipe)) {
+                // Energia disponibile: avanza il progresso
                 consumeEnergy(actualEnergyConsumption);
-                
-                // Applica il moltiplicatore di velocità
                 progress += multiplier;
                 isDirty = true;
 
@@ -208,13 +214,12 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
                     craftItem(recipe);
                     resetProgress();
                 }
-            } else {
-                if (progress > 0) {
-                    resetProgress();
-                    isDirty = true;
-                }
             }
+            // Se manca energia o output pieno: il progresso NON viene azzerato.
+            // Il crafting riprende da dove si era fermato appena l'energia torna disponibile.
+
         } else {
+            // Nessuna ricetta valida (ingredienti cambiati/rimossi): azzera il progresso
             if (progress > 0) {
                 resetProgress();
                 isDirty = true;
