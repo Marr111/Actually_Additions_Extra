@@ -19,10 +19,6 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.RangedWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import com.example.processingmod.recipes.AAMachineRecipe;
-import com.example.processingmod.recipes.AAMachineRecipeInput;
-import com.example.processingmod.recipes.ModRecipes;
 import de.ellpeck.actuallyadditions.mod.crafting.ActuallyRecipes;
 import de.ellpeck.actuallyadditions.mod.crafting.EmpowererRecipe;
 
@@ -227,11 +223,17 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     private void craftItem(EmpowererRecipe recipe) {
         // Rimuovi input (5 slot)
         for (int i = 0; i < 5; i++) {
-            itemHandler.extractItem(i, 1, false);
+            itemHandler.getStackInSlot(i).shrink(1);
         }
 
         // Aggiungi l'output (slot 5)
-        itemHandler.insertItem(5, recipe.getResultItem(level.registryAccess()).copy(), false);
+        ItemStack output = recipe.getResultItem(this.level.registryAccess()).copy();
+        ItemStack existing = itemHandler.getStackInSlot(5);
+        if (existing.isEmpty()) {
+            itemHandler.setStackInSlot(5, output);
+        } else {
+            existing.grow(output.getCount());
+        }
     }
 
     private void resetProgress() {
@@ -316,7 +318,7 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private boolean canFitOutput(EmpowererRecipe recipe) {
-        ItemStack output = recipe.getResultItem(level.registryAccess());
+        ItemStack output = recipe.getResultItem(this.level.registryAccess());
         ItemStack existing = itemHandler.getStackInSlot(5);
         if (existing.isEmpty()) return true;
         if (!ItemStack.isSameItemSameComponents(existing, output)) return false;

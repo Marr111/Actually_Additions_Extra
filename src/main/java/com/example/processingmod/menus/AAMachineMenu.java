@@ -31,7 +31,6 @@ public class AAMachineMenu extends AbstractContainerMenu {
     // Costruttore Server (chiamato dalla BlockEntity)
     public AAMachineMenu(int containerId, Inventory inv, BlockEntity entity, ContainerData data) {
         super(ModMenus.AA_MACHINE_MENU.get(), containerId);
-        checkContainerSize(inv, 7);
         blockEntity = (AAMachineBlockEntity) entity;
         this.levelAccess = ContainerLevelAccess.create(blockEntity.getLevel(), blockEntity.getBlockPos());
         this.data = data;

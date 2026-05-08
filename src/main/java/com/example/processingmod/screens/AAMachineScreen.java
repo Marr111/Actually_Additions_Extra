@@ -13,8 +13,6 @@ import java.util.Optional;
 
 public class AAMachineScreen extends AbstractContainerScreen<AAMachineMenu> {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(ProcessingMod.MODID, "textures/gui/aa_machine.png");
-
     public AAMachineScreen(AAMachineMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 176;

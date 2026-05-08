@@ -1,8 +1,0 @@
-{
-  "type": "processingmod:aa_machine",
-  "ingredient1": { "item": "minecraft:iron_ingot" },
-  "ingredient2": { "item": "minecraft:gold_ingot" },
-  "result1": { "id": "minecraft:diamond", "count": 1 },
-  "energy_cost": 5000,
-  "processing_time": 100
-}
