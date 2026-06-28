@@ -22,8 +22,10 @@ Enhance your Advanced Empowerer with modular microchips:
 ## Installation & Availability
 This mod is designed for **NeoForge 1.21.1**. 
 
-The mod will be available soon on **CurseForge**!
-[Link to CurseForge (Coming Soon)](https://www.curseforge.com/minecraft/mc-mods/aa-extra)
+**Download Links:**
+* 🟢 **CurseForge:** [Actually Additions Extra](https://www.curseforge.com/minecraft/mc-mods/actually-additions-extra)
+* 🔵 **Modrinth:** [Actually Additions Extra](https://modrinth.com/mod/actually-additions-extra)
+* 🐙 **Source Code (GitHub):** [Actually_Additions_Extra](https://github.com/Marr111/Actually_Additions_Extra)
 
 ## License
 This project is licensed under the **MIT License**. See the `LICENSE.txt` file for details.
