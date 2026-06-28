@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "all": "processingmod:block/aa_machine"
+    "particle": "processingmod:block/aa_machine_front",
+    "down": "processingmod:block/aa_machine_bottom",
+    "up": "processingmod:block/aa_machine_top",
+    "north": "processingmod:block/aa_machine_front",
+    "south": "processingmod:block/aa_machine_back",
+    "west": "processingmod:block/aa_machine_left",
+    "east": "processingmod:block/aa_machine_right"
   }
 }

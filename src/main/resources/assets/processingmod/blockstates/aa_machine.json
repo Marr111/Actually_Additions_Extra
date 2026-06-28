@@ -1,7 +1,12 @@
 {
   "variants": {
-    "": {
-      "model": "processingmod:block/aa_machine"
-    }
+    "facing=north,lit=false": { "model": "processingmod:block/aa_machine" },
+    "facing=south,lit=false": { "model": "processingmod:block/aa_machine", "y": 180 },
+    "facing=west,lit=false": { "model": "processingmod:block/aa_machine", "y": 270 },
+    "facing=east,lit=false": { "model": "processingmod:block/aa_machine", "y": 90 },
+    "facing=north,lit=true": { "model": "processingmod:block/aa_machine_active" },
+    "facing=south,lit=true": { "model": "processingmod:block/aa_machine_active", "y": 180 },
+    "facing=west,lit=true": { "model": "processingmod:block/aa_machine_active", "y": 270 },
+    "facing=east,lit=true": { "model": "processingmod:block/aa_machine_active", "y": 90 }
   }
 }

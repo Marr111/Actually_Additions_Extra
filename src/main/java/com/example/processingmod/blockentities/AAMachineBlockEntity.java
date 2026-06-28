@@ -186,6 +186,7 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
         if (level.isClientSide()) return; // Esegui solo lato server
 
         boolean isDirty = false;
+        boolean isProcessing = false;
         Optional<RecipeHolder<EmpowererRecipe>> recipeOpt = findMatchingRecipe(level);
 
         if (recipeOpt.isPresent()) {
@@ -206,6 +207,7 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
 
             if (hasEnoughEnergy(actualEnergyConsumption) && canFitOutput(recipe)) {
                 // Energia disponibile: avanza il progresso
+                isProcessing = true;
                 consumeEnergy(actualEnergyConsumption);
                 progress += multiplier;
                 isDirty = true;
@@ -223,6 +225,13 @@ public class AAMachineBlockEntity extends BlockEntity implements MenuProvider {
             if (progress > 0) {
                 resetProgress();
                 isDirty = true;
+            }
+        }
+
+        // Aggiorna lo stato LIT del blocco se è cambiato
+        if (state.hasProperty(com.example.processingmod.blocks.AAMachineBlock.LIT)) {
+            if (state.getValue(com.example.processingmod.blocks.AAMachineBlock.LIT) != isProcessing) {
+                level.setBlock(pos, state.setValue(com.example.processingmod.blocks.AAMachineBlock.LIT, isProcessing), 3);
             }
         }
 

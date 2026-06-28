@@ -13,6 +13,8 @@ import java.util.Optional;
 
 public class AAMachineScreen extends AbstractContainerScreen<AAMachineMenu> {
 
+    private static final ResourceLocation ENERGY_BAR = ResourceLocation.fromNamespaceAndPath(ProcessingMod.MODID, "textures/gui/energy_bar.png");
+
     public AAMachineScreen(AAMachineMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 176;
@@ -62,12 +64,15 @@ public class AAMachineScreen extends AbstractContainerScreen<AAMachineMenu> {
             guiGraphics.fill(slotX + 1, slotY + 1, slotX + 17, slotY + 17, 0xFF1A1A1A);
         }
 
-        // Barra energia (Sfondo) — termina a y+70, 2px sopra la label "Inventory" a y+72
+        // Linea divisoria tra inventario macchina e giocatore
+        guiGraphics.fill(x + 7, y + 82, x + this.imageWidth - 7, y + 83, 0xFF444444);
+
+        // Barra energia (Sfondo scuro di default)
         guiGraphics.fill(x + 8, y + 8, x + 20, y + 70, 0xFF1A1A1A);
-        // Disegna energia attiva
+        // Disegna energia attiva tramite la texture generata
         int energy = menu.getScaledEnergy();
         if (energy > 0) {
-            guiGraphics.fill(x + 8, y + 70 - energy, x + 20, y + 70, 0xFFFE3D3D);
+            guiGraphics.blit(ENERGY_BAR, x + 8, y + 70 - energy, 0, 62 - energy, 12, energy, 12, 62);
         }
 
         // Sfondi slot macchina (5 Input)
